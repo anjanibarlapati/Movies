@@ -17,17 +17,24 @@ type Movie = {
 
 async function readMoviesData(path: string): Promise<void> {
     return new Promise((resolve, reject) => {
-        fs.createReadStream(path)
-          .pipe(csvParser())
-          .on('data', async (row: Movie) => {
+        const fileStream = fs.createReadStream(path);
+        const csvPipe = fileStream.pipe(csvParser());
+        let count =0;
+          csvPipe.on('data', async (row: Movie) => {
+                   console.log("Processing Record" + (++count) + ": " +  row);
+                   csvPipe.pause();
                    try {
                          await Movies.create(row);
+                         console.log("inserteddd");
                    } catch(Error: any) {
                          console.log(Error);
-                   }              
+                   }  
+                   finally {
+                    csvPipe.resume();
+                }        
           })
-          .on('end', () => { resolve()})
-          .on('error', (Error) => reject(Error));
+          csvPipe.on('end', () => { resolve()})
+          csvPipe.on('error', (Error) => reject(Error));
       }); 
 }
 
